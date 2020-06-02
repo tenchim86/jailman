@@ -42,3 +42,15 @@ def define_cli(parser):
         metavar="BLUEPRINT",
         help="Destroy a blueprint",
     )
+
+
+def to_install(opts):
+    return opts.to_install
+
+
+def to_destroy(opts):
+    return opts.to_destroy
+
+
+def config(opts):
+    return opts.config

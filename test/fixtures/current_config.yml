@@ -1,3 +1,17 @@
 global:
-    version: v1.3
-    dataset: tank/apps
+    version: v1.4
+    dataset:
+        config: tank/apps
+        media: tank/media
+    jails:
+        # jail version to install
+        version: 11.3-RELEASE
+        # Global pkgs to install in all jails.
+        # Please use standard space delimited pkg install syntax.
+        pkgs: curl ca_root_nss bash
+
+jails:
+    plexjail:
+        blueprint: plex
+        ip4_addr: 192.168.1.99/24
+        gateway: 192.168.1.1

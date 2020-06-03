@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "self": {
+    "vendor": "pailman",
+    "name": "config.schema.json",
+    "format": "jsonschema",
+    "version": "0-0-1"
+  },
+  "definitions": {
+    "global": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "const": "v1.4"
+        },
+        "dataset": {
+          "type": "object",
+          "properties": {
+            "config": {
+              "type": "string"
+            },
+            "media": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "config",
+            "media"
+          ]
+        },
+        "jails": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "pkgs": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "version",
+            "pkgs"
+          ]
+        }
+      },
+      "required": [
+        "version",
+        "dataset",
+        "jails"
+      ]
+    },
+    "jails": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "$ref": "#/definitions/jail"
+        }
+      },
+      "additionalProperties": false
+    },
+    "jail": {
+      "type": "object",
+      "properties": {
+        "blueprint": {
+          "type": "string"
+        },
+        "dhcp": {
+          "type": "string",
+          "enum": [
+            "off",
+            "on",
+            "override"
+          ]
+        },
+        "ip4_addr": {
+          "type": "string"
+        },
+        "gateway": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "blueprint"
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "global": {
+      "$ref": "#/definitions/global"
+    },
+    "jails": {
+      "$ref": "#/definitions/jails"
+    }
+  },
+  "required": [
+    "global",
+    "jails"
+  ]
+}

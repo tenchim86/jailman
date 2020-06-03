@@ -1,15 +1,24 @@
 import argparse
+import sys
 
-from pailman.cli import define_cli
-from pailman.config import read_config
-from pailman.defaults import DEFAULT_CONFIG
+from fastjsonschema import JsonSchemaException
+
+from pailman.cli import config_file, define_cli, to_destroy, to_install
+from pailman.config import read_config, validate_config
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="pailman")
     define_cli(parser)
     opts = parser.parse_args()
 
-    read_config(DEFAULT_CONFIG)
+    print("using config: {}".format(config_file(opts)))
+    cfg = read_config(config_file(opts))
 
-    print("to install: {}".format(opts.to_install))
-    print("to destroy: {}".format(opts.to_destroy))
+    try:
+        validate_config(cfg)
+    except JsonSchemaException as error:
+        print("config is invalid: {}".format(error.message))
+        sys.exit(1)
+
+    print("to install: {}".format(to_install(opts)))
+    print("to destroy: {}".format(to_destroy(opts)))

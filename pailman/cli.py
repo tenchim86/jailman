@@ -1,6 +1,6 @@
 import argparse
 
-from pailman.defaults import DEFAULT_CONFIG
+from pailman.defaults import DEFAULT_CONFIG_FILE
 
 
 # this is included from Python 3.8+
@@ -18,10 +18,10 @@ def define_cli(parser):
         "--config",
         action="store",
         dest="config",
-        default=DEFAULT_CONFIG,
+        default=DEFAULT_CONFIG_FILE,
         metavar="CONFIG",
         help="Use configuration in CONFIG. Defaults to `{}` in current directory".format(
-            DEFAULT_CONFIG
+            DEFAULT_CONFIG_FILE
         ),
     )
     parser.add_argument(
@@ -52,5 +52,5 @@ def to_destroy(opts):
     return opts.to_destroy
 
 
-def config(opts):
+def config_file(opts):
     return opts.config

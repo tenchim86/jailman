@@ -51,4 +51,4 @@ def test_cli_collects_multiple_use_of_install(parser) -> None:
 
 def test_cli_accepts_config(parser) -> None:
     opts = parser.parse_args(["-c", "test/fixtures/emptyconfig.yml"])
-    assert cli.config(opts) == "test/fixtures/emptyconfig.yml"
+    assert cli.config_file(opts) == "test/fixtures/emptyconfig.yml"

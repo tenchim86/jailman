@@ -33,9 +33,17 @@ def validate_config(cfg):
         )
     elif cfg[CONFIG_KEYS.GLOBAL][GLOBAL_KEYS.VERSION] != CONFIG_VERSION:
         errors.append(
-            "{}.{} does notch match latest: {}".format(
+            "{}.{} does not match latest: {}".format(
                 GLOBAL_KEYS.VERSION, CONFIG_KEYS.GLOBAL, CONFIG_VERSION
             )
+        )
+    elif GLOBAL_KEYS.DATASET not in cfg[CONFIG_KEYS.GLOBAL]:
+        errors.append(
+            "missing {} in {}".format(GLOBAL_KEYS.DATASET, CONFIG_KEYS.GLOBAL)
+        )
+    elif cfg[CONFIG_KEYS.GLOBAL][GLOBAL_KEYS.DATASET] is None:
+        errors.append(
+            "{}.{} is empty in config".format(CONFIG_KEYS.GLOBAL, GLOBAL_KEYS.DATASET)
         )
     else:
         valid = True

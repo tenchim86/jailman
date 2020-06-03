@@ -11,11 +11,11 @@ DEFAULT_CONFIG = "config.yml"
 CONFIG_VERSION = "v1.3"
 
 
-class CONFIG_KEYS:
-    GLOBAL = "global"
-    JAIL = "jail"
-
-
 class GLOBAL_KEYS:
     VERSION = "version"
     DATASET = "dataset"
+
+
+class CONFIG_KEYS:
+    GLOBAL = "global"
+    JAIL = "jail"

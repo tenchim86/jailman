@@ -1,5 +1,8 @@
 DEFAULT_CONFIG_FILE = "config.yml"
+DEFAULT_BLUEPRINTS_DIR = "blueprints"
+BLUEPRINTS_GLOB = "*/*.yml"
 CONFIG_SCHEMA = "pailman/config.schema.json"
+BLUEPRINT_SCHEMA = "pailman/blueprint.schema.json"
 CONFIG_VERSION = "v1.4"
 
 
@@ -25,3 +28,7 @@ class JAIL_KEYS:
     GATEWAY = "gateway"
     DHCP = "dhcp"
     LINK = "link"
+
+
+class BLUEPRINT_KEYS:
+    BLUEPRINT = "blueprint"

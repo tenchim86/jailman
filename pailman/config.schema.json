@@ -57,7 +57,7 @@
                     "$ref": "#/definitions/jail"
                 }
             },
-            "additionalProperties": false
+            "minProperties": 1
         },
         "jail": {
             "type": "object",
@@ -106,5 +106,7 @@
     "required": [
         "global",
         "jails"
-    ]
+    ],
+    "maxProperties": 2,
+    "additionalProperties": false
 }

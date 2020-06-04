@@ -172,3 +172,118 @@ jails:
 @pytest.fixture
 def valid_yaml_config(valid_config):
     return parse_config(valid_config)
+
+
+@pytest.fixture()
+def invalid_jails_config():
+    return parse_config(
+        """
+global:
+  version: {}
+  dataset:
+    config: tank/apps
+    media: tank/media
+  jails:
+    version: 11.3-RELEASE
+    pkgs: curl ca_root_nss bash
+jails:
+  foo:
+    blueprint: bar
+jails:
+  plexjail:
+    blueprint: plex
+    dhcp: on
+    beta: false
+""".format(
+            CONFIG_VERSION
+        )
+    )
+
+
+@pytest.fixture()
+def invalid_jail_members_config():
+    return parse_config(
+        """
+global:
+  version: {}
+  dataset:
+    config: tank/apps
+    media: tank/media
+  jails:
+    version: 11.3-RELEASE
+    pkgs: curl ca_root_nss bash
+  foo:
+    blueprint: bar
+jails:
+""".format(
+            CONFIG_VERSION
+        )
+    )
+
+
+@pytest.fixture()
+def invalid_blueprint_config():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    pkgs: foo bar baz
+jails:
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_duplicate_pkg_config():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    pkgs: foo bar foo
+jails:
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_no_blueprint_config():
+    return parse_config(
+        """
+blueprint:
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_no_pkg_config():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    pkgs: foo bar baz
+jails:
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_add_vars_config():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    pkgs: foo bar baz
+jails:
+"""
+    )
+
+
+@pytest.fixture()
+def valid_blueprint():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    pkgs: foo bar baz
+"""
+    )

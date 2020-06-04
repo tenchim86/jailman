@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "self": {
+        "vendor": "pailman",
+        "name": "blueprint.schema.json",
+        "format": "jsonschema",
+        "version": "0-0-1"
+    },
+    "definitions": {
+        "blueprint_item": {
+            "type": "object",
+            "properties": {
+                "pkgs": {
+                    "type": "array",
+                    "minItems": 0,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "pkgs"
+            ]
+        },
+        "blueprint_def": {
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "$ref": "#/definitions/blueprint_item"
+                }
+            },
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": false
+        }
+    },
+    "type": "object",
+    "properties": {
+        "blueprint": {
+            "$ref": "#/definitions/blueprint_def"
+        }
+    },
+    "required": [
+        "blueprint"
+    ],
+    "maxProperties": 1,
+    "minProperties": 1,
+    "additionalProperties": false
+}
+

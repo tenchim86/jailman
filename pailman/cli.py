@@ -30,8 +30,26 @@ def define_cli(parser):
         nargs="+",
         action="extend",
         dest="to_install",
-        metavar="BLUEPRINT",
-        help="Install a blueprint",
+        metavar="JAIL",
+        help="Install a jail",
+    )
+    parser.add_argument(
+        "-r",
+        "--reinstall",
+        nargs="+",
+        action="extend",
+        dest="to_reinstall",
+        metavar="JAIL",
+        help="Reinstall a jail",
+    )
+    parser.add_argument(
+        "-u",
+        "--update",
+        nargs="+",
+        action="extend",
+        dest="to_update",
+        metavar="JAIL",
+        help="Update a jail",
     )
     parser.add_argument(
         "-d",
@@ -39,13 +57,21 @@ def define_cli(parser):
         nargs="+",
         action="extend",
         dest="to_destroy",
-        metavar="BLUEPRINT",
-        help="Destroy a blueprint",
+        metavar="JAIL",
+        help="Destroy a jail",
     )
 
 
 def to_install(opts):
     return opts.to_install
+
+
+def to_reinstall(opts):
+    return opts.to_reinstall
+
+
+def to_update(opts):
+    return opts.to_update
 
 
 def to_destroy(opts):

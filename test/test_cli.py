@@ -25,6 +25,20 @@ def test_cli_accepts_install(parser) -> None:
     assert i[0] == "foo"
 
 
+def test_cli_accepts_reinstall(parser) -> None:
+    opts = parser.parse_args(["-r", "foo"])
+    r = cli.to_reinstall(opts)
+    assert len(r) == 1
+    assert r[0] == "foo"
+
+
+def test_cli_accepts_update(parser) -> None:
+    opts = parser.parse_args(["-u", "foo"])
+    u = cli.to_update(opts)
+    assert len(u) == 1
+    assert u[0] == "foo"
+
+
 def test_cli_accepts_detroy(parser) -> None:
     opts = parser.parse_args(["-d", "foo"])
     d = cli.to_destroy(opts)

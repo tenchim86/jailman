@@ -1,7 +1,7 @@
 import json
 
 import yaml
-from fastjsonschema import validate
+from jsonschema import validate
 from yaml.resolver import Resolver
 
 from pailman.defaults import CONFIG_SCHEMA, CONFIG_VERSION  # noqa: F401
@@ -24,41 +24,6 @@ def _configure_yaml_parser():
 _configure_yaml_parser()
 
 
-# WIP - need to find a way to map dict values to instances of BlueprintConfig
-# class GlobalConfig(yaml.YAMLObject):
-#     yaml_tag = '!global'
-#
-#     version = ""
-#     dataset = {}
-#
-#
-# class JailsConfig(yaml.YAMLObject):
-#     yaml_tag = '!jails'
-#     entries = {}
-#
-#     def __init__(self, entries):
-#         self.entries = entries
-#
-#
-# class BlueprintConfig(yaml.YAMLObject):
-#     blueprint = ""
-#     ip4_addr = ""
-#     gateway = ""
-#     dhcp = ""
-#
-#
-# yaml.add_path_resolver('!global', ['global'], dict)
-# this ignores children
-# yaml.add_path_resolver('!jails', ['jails'], dict)
-#
-#
-# def parse_config(filename):
-#     with open(filename) as file:
-#         contents = yaml.load(file, Loader=yaml.FullLoader)
-#         return contents
-#
-
-
 def parse_config(cfg):
     contents = yaml.safe_load(cfg)
     return contents
@@ -77,7 +42,7 @@ def read_schema(filename):
 
 
 def validate_config_with_schema(cfg, schema):
-    return validate(schema, json.loads(json.dumps(cfg)))
+    return validate(schema=schema, instance=json.loads(json.dumps(cfg)))
 
 
 def validate_config(cfg):

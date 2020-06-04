@@ -1,5 +1,5 @@
 import pytest
-from fastjsonschema import JsonSchemaException
+from jsonschema import ValidationError
 
 from pailman.config import (
     parse_config,
@@ -11,61 +11,8 @@ from pailman.config import (
 from pailman.defaults import CONFIG_SCHEMA, CONFIG_VERSION  # noqa: F401
 
 
-@pytest.fixture
-def empty_config_file():
-    return "test/fixtures/empty_config.yml"
-
-
-@pytest.fixture
-def current_config():
-    return read_config("test/fixtures/current_config.yml")
-
-
 def test_read_config(empty_config_file) -> None:
     assert read_config(empty_config_file) is None
-
-
-@pytest.fixture(
-    params=[
-        "test/fixtures/datasetempty_config.yml",
-        "test/fixtures/datasetless_config.yml",
-        "test/fixtures/empty_config.yml",
-        "test/fixtures/globalless_config.yml",
-        "test/fixtures/globalwithoutversion_config.yml",
-        "test/fixtures/outdated_config.yml",
-        "test/fixtures/versionless_config.yml",
-        "test/fixtures/versionempty_config.yml",
-    ]
-)
-def invalid_config(request):
-    return read_config(request.param)
-
-
-@pytest.fixture
-def valid_config():
-    return """
-global:
-  version: {}
-  dataset:
-    config: tank/apps
-    media: tank/media
-  jails:
-    version: 11.3-RELEASE
-    pkgs: curl ca_root_nss bash
-jails:
-  plexjail:
-    blueprint: plex
-    ip4_addr: 192.168.1.99/24
-    gateway: 192.168.1.1
-    beta: false
-""".format(
-        CONFIG_VERSION
-    )
-
-
-@pytest.fixture
-def valid_yaml_config(valid_config):
-    return parse_config(valid_config)
 
 
 def test_current_config_is_valid(current_config) -> None:
@@ -96,5 +43,28 @@ def test_validate_config_with_schema(valid_yaml_config):
 
 
 def test_invalid_config(invalid_config):
-    with pytest.raises(JsonSchemaException):
+    with pytest.raises(ValidationError):
         validate_config(invalid_config)
+
+
+def test_dhcp_and_ip_exclusive(invalid_dhcp_ip_config):
+    with pytest.raises(ValidationError):
+        validate_config(invalid_dhcp_ip_config)
+
+
+def test_dhcp_and_gw_exclusive(invalid_dhcp_gw_config):
+    with pytest.raises(ValidationError):
+        validate_config(invalid_dhcp_gw_config)
+
+
+def test_dhcp_and_ip_gw_exclusive(invalid_dhcp_ip_gw_config):
+    with pytest.raises(ValidationError):
+        validate_config(invalid_dhcp_ip_gw_config)
+
+
+def test_dhcp_is_ok(valid_dhcp_config):
+    validate_config(valid_dhcp_config)
+
+
+def test_dhcp_is_optional(valid_dhcp_optional_config):
+    validate_config(valid_dhcp_optional_config)

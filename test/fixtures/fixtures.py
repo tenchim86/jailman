@@ -287,3 +287,145 @@ blueprint:
     pkgs: foo bar baz
 """
     )
+
+
+@pytest.fixture()
+def blueprint_no_root_config():
+    return parse_config(
+        """
+foo:
+    something: 3
+bar:
+- yikes
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_pkg_array_config():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    pkgs: [ foo bar baz ]
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_pkg_array_block_config():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    pkgs:
+    - foo
+    - bar
+    - baz
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_vars_reqvars_config():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    pkgs: foo bar baz
+    vars: alice bob
+    reqvars: zack yves xavier
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_plex():
+    return parse_config(
+        """
+blueprint:
+  plex:
+    traefik_service_port: 32400
+    pkgs: plexmediaserver
+    vars: beta ramdisk hw_transcode hw_transcode_ruleset ruleset_script
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_foo():
+    return parse_config(
+        """
+blueprint:
+  foo:
+    traefik_service_port: 32400
+    pkgs: plexmediaserver
+    vars: beta ramdisk hw_transcode hw_transcode_ruleset ruleset_script
+"""
+    )
+
+
+@pytest.fixture()
+def blueprint_reqvars():
+    return parse_config(
+        """
+blueprint:
+  plex:
+    traefik_service_port: 32400
+    pkgs: plexmediaserver
+    vars: beta ramdisk hw_transcode hw_transcode_ruleset ruleset_script
+    reqvars: beta ramdisk
+"""
+    )
+
+
+@pytest.fixture
+def valid_config_reqvars():
+    return parse_config(
+        """
+global:
+  version: {}
+  dataset:
+    config: tank/apps
+    media: tank/media
+  jails:
+    version: 11.3-RELEASE
+    pkgs: curl ca_root_nss bash
+jails:
+  plexjail:
+    blueprint: plex
+    ip4_addr: 192.168.1.99/24
+    gateway: 192.168.1.1
+    beta: false
+    ramdisk: foo
+""".format(
+            CONFIG_VERSION
+        )
+    )
+
+
+@pytest.fixture
+def valid_config_add_vars():
+    return parse_config(
+        """
+global:
+  version: {}
+  dataset:
+    config: tank/apps
+    media: tank/media
+  jails:
+    version: 11.3-RELEASE
+    pkgs: curl ca_root_nss bash
+jails:
+  plexjail:
+    blueprint: plex
+    ip4_addr: 192.168.1.99/24
+    gateway: 192.168.1.1
+    beta: false
+    ramdisk: foo
+    some: other
+    variable: 42
+""".format(
+            CONFIG_VERSION
+        )
+    )

@@ -11,12 +11,19 @@
             "type": "object",
             "properties": {
                 "pkgs": {
-                    "type": "array",
-                    "minItems": 0,
-                    "uniqueItems": true,
-                    "items": {
-                      "type": "string"
-                    }
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "array",
+                            "minItems": 0,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    ]
                 }
             },
             "required": [

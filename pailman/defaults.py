@@ -8,7 +8,7 @@ CONFIG_VERSION = "v1.4"
 
 class CONFIG_KEYS:
     GLOBAL = "global"
-    JAIL = "jail"
+    JAILS = "jails"
 
 
 class GLOBAL_KEYS:
@@ -32,3 +32,6 @@ class JAIL_KEYS:
 
 class BLUEPRINT_KEYS:
     BLUEPRINT = "blueprint"
+    VARS = "vars"
+    REQVARS = "reqvars"
+    PKGS = "pkgs"

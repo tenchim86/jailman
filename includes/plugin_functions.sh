@@ -63,22 +63,28 @@ initplugin() {
 export -f initplugin
 
 cleanupplugin() {
-	local jail_name=${1:?}
-
-	link_traefik="${jail_name}_link_traefik"
-	if [ -n "${!link_traefik:-}" ]; then
-		echo "removing remains..."
-		rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}".toml
-		rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}"_auth_basic.toml
-		rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}"_auth_forward.toml
+	if [ -z "${1:-}" ]; then
+		echo "No jail to clean"
+	else
+		link_traefik="${1:-}_link_traefik"
+		if [ -n "${!link_traefik:-}" ]; then
+			echo "removing remains..."
+			rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}".toml
+			rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}"_auth_basic.toml
+			rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}"_auth_forward.toml
+		fi
 	fi
 }
 export -f cleanupplugin
 
 summadd() {
-	echo "$2"
-	echo "$2" >> "${SCRIPT_DIR}/summaries/${starttime}.txt"
-	iocage exec "$1" echo "$2" >> "/root/PLUGIN_INFO"
+	local jail_name="${1:-}"
+	local message="${2:-}"
+	echo "${message}"
+	echo "${message}" >> "${SCRIPT_DIR}/summaries/${starttime}.txt"
+	if [ -n "${jail_name}" ]; then
+		iocage exec "${1}" echo "${message}" >> "/root/PLUGIN_INFO"
+	fi
 }
 export -f summadd
 

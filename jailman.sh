@@ -31,6 +31,8 @@ source "${SCRIPT_DIR}/includes/global_functions.sh"
 # shellcheck source=includes/plugin_functions.sh
 source "${SCRIPT_DIR}/includes/plugin_functions.sh"
 
+touch "${SCRIPT_DIR}/summaries/${starttime}.txt"
+
 usage() {
 	echo "Usage:"
 	echo "$0"
@@ -164,17 +166,19 @@ fi
 
 # Check and Execute requested jail destructions
 if [ ${#destroyjails[@]} -gt 0 ]; then
-	echo "jails to destroy" "${destroyjails[@]}"
+	summadd "" ""
+	summadd "" "jails to destroy: ${destroyjails[@]}"
 	for jail in "${destroyjails[@]}"
 	do
-		iocage destroy -fR "${jail}" || warn "destroy failed for ${jail}"
+		iocage destroy -fR "${jail}" && summadd "" "destroyed ${jail}" || summadd "" "destroy failed for ${jail}"
 		cleanupplugin "${jail}"
 	done
 fi
 
 # Check and Execute requested jail destructions
 if [ ${#nukedata[@]} -gt 0 ]; then
-	echo "Jail-datasets to destroy" "${nukedata[@]}"
+	summadd "" ""
+	summadd "" "Jail-datasets to Nuke: ${nukedata[@]}"
 	echo -e "${errcol}-n stands for NUKE for a reason."
 	echo -e "We HIGHLY recommend you NOT to use this feature, but destroy any data(sets) yourself, manually. ${normcol}"
 	for jail in "${nukedata[@]}"
@@ -183,15 +187,15 @@ if [ ${#nukedata[@]} -gt 0 ]; then
 		echo    # (optional) move to a new line
 		if [[ $REPLY =~ ^[Yy]$ ]]
 		then
-			zfs destroy "${global_dataset_config}/${jail}" || echo "Nothing deleted"
-			echo -e "${errcol} DESTROYED: ${global_dataset_config}/${jail} ${normcol}"
+			zfs destroy "${global_dataset_config}/${jail}" && summadd "" "Nuked dataset for ${jail}" || summadd "" "Nuking dataset failed for ${jail}"
 		fi
 	done
 fi
 
 # Check and Execute requested jail Installs
 if [ ${#installjails[@]} -gt 0 ]; then
-	echo "jails to install" "${installjails[@]}"
+	summadd "" ""
+	summadd "" "jails to install: ${installjails[@]}"
 	for jail in "${installjails[@]}"
 	do
 		plugin=${jail}_plugin
@@ -200,7 +204,7 @@ if [ ${#installjails[@]} -gt 0 ]; then
 			echo "Config for ${jail} in config.yml incorrect. Please check your config."
 			exit 1
 		else
-			jailcreate "${jail}" "${!plugin}" 
+			jailcreate "${jail}" "${!plugin}" || summadd "" "Install failed for ${jail}"
 		fi
 		if [ -f "${global_dataset_iocage}/jails/${jail}/plugin/jailman/finish_install.sh" ]
 		then
@@ -214,7 +218,7 @@ if [ ${#installjails[@]} -gt 0 ]; then
 			fi
 
 			echo "Installing $jail"
-			"${global_dataset_iocage}"/jails/"${jail}"/plugin/jailman/finish_install.sh "${jail}"
+			"${global_dataset_iocage}"/jails/"${jail}"/plugin/jailman/finish_install.sh "${jail}" || summadd "" "Install failed for ${jail}"
 		else
 			echo "Missing plugin ${!plugin} for $jail in ${global_dataset_iocage}/jails/${jail}/plugin/jailman/finish_install.sh"
 			exit 1
@@ -224,7 +228,8 @@ fi
 
 # Check and Execute requested jail Reinstalls
 if [ ${#redojails[@]} -gt 0 ]; then
-	echo "jails to reinstall" "${redojails[@]}"
+	summadd "" ""
+	summadd "" "jails to reinstall: ${redojails[@]}"
 	for jail in "${redojails[@]}"
 	do
 		plugin=${jail}_plugin
@@ -233,7 +238,9 @@ if [ ${#redojails[@]} -gt 0 ]; then
 			echo "Config for ${jail} in config.yml incorrect. Please check your config."
 			exit 1
 		else
-			iocage destroy -fR "${jail}" && cleanupplugin "${jail}" && jailcreate "${jail}" "${!plugin}" 
+			iocage destroy -fR "${jail}" || true
+			cleanupplugin "${jail}" || true
+			jailcreate "${jail}" "${!plugin}" || summadd "" "Reinstall failed for ${jail}"
 		fi
 		if [ -f "${global_dataset_iocage}/jails/${jail}/plugin/jailman/finish_install.sh" ]
 		then
@@ -247,7 +254,7 @@ if [ ${#redojails[@]} -gt 0 ]; then
 			fi
 
 			echo "Reinstalling $jail"
-			"${global_dataset_iocage}"/jails/"${jail}"/plugin/jailman/finish_install.sh "${jail}"
+			"${global_dataset_iocage}"/jails/"${jail}"/plugin/jailman/finish_install.sh "${jail}" || summadd "" "Reinstall failed for ${jail}"
 		else
 			echo "Missing plugin ${!plugin} for $jail in ${global_dataset_iocage}/jails/${jail}/plugin/jailman/finish_install.sh"
 			exit 1
@@ -257,7 +264,8 @@ fi
 
 # Check and Execute requested jail Updates
 if [ ${#updatejails[@]} -gt 0 ]; then
-	echo "jails to update" "${updatejails[@]}"
+	summadd "" ""
+	summadd "" "jails to update: ${updatejails[@]}"
 	for jail in "${updatejails[@]}"
 	do
 		plugin=${jail}_plugin
@@ -266,7 +274,7 @@ if [ ${#updatejails[@]} -gt 0 ]; then
 			echo "Config for ${jail} in config.yml incorrect. Please check your config."
 			exit 1
 		else
-			iocage update "${jail}"
+			iocage update "${jail}" || summadd "" "Update failed for ${jail}"
 		fi
 		if [ -f "${global_dataset_iocage}/jails/${jail}/plugin/jailman/finish_install.sh" ]
 		then
@@ -280,7 +288,7 @@ if [ ${#updatejails[@]} -gt 0 ]; then
 			fi
 
 			echo "Updating $jail"
-			"${global_dataset_iocage}"/jails/"${jail}"/plugin/jailman/finish_update.sh "${jail}"
+			"${global_dataset_iocage}"/jails/"${jail}"/plugin/jailman/finish_update.sh "${jail}" || summadd "" "Update failed for ${jail}"
 			iocage restart "${jail}"
 		else
 			echo "Missing plugin ${!plugin} for $jail in ${global_dataset_iocage}/jails/${jail}/plugin/jailman/finish_update.sh"
@@ -291,7 +299,8 @@ fi
 
 # Check and Execute requested jail Upgrades
 if [ ${#upgradejails[@]} -gt 0 ]; then
-	echo "jails to update" "${upgradejails[@]}"
+	summadd "" ""
+	summadd "" "jails to upgrade: ${upgradejails[@]}"
 	for jail in "${upgradejails[@]}"
 	do
 		plugin=${jail}_plugin
@@ -321,10 +330,10 @@ if [ ${#upgradejails[@]} -gt 0 ]; then
 	done
 fi
 
-
+summadd "" ""
+summadd "" ""
 echo ""
 echo ""
-echo ""
-echo ""
-echo "Jailman run finished, Summary: "
+echo "Jailman run finished, installation summary: "
 cat "${SCRIPT_DIR}/summaries/${starttime}.txt"
+

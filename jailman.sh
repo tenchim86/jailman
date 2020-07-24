@@ -141,6 +141,9 @@ do
 	esac
 done
 
+# Trick iocage into activating based on TrueNAS system dataset
+iocage list >> /dev/null
+
 # Color code shortcuts
 normcol='\033[m'
 warncol='\033[33m'

@@ -108,6 +108,7 @@ grafanajail:
   password: grafana
   link_influxdb: influxdbjail
   link_unifi: unifijail
+  link_traefik: traefikjail
 
 forked_daapdjail:
   blueprint: forked_daapd
@@ -130,6 +131,8 @@ traefikjail:
   cert_env:
     CF_API_EMAIL: fake@email.adress
     CF_API_KEY: ftyhsfgufsgusfgjhsfghjsgfhj
+  link_influxdb: influxdbjail
+  influxdb_password: traefikmetricspass
 
 sabnzbdjail:
   blueprint: sabnzbd

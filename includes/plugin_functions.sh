@@ -66,12 +66,12 @@ cleanupplugin() {
 	if [ -z "${1:-}" ]; then
 		echo "No jail to clean"
 	else
-		link_traefik="${1:-}_link_traefik"
-		if [ -n "${!link_traefik:-}" ]; then
+		traefik_proxy="${1:-}_traefik_proxy"
+		if [ -n "${!traefik_proxy:-}" ]; then
 			echo "removing remains..."
-			rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}".toml
-			rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}"_auth_basic.toml
-			rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}"_auth_forward.toml
+			rm -f /mnt/"${global_dataset_config}"/"${traefik_proxy}"/dynamic/"${1:-}".toml
+			rm -f /mnt/"${global_dataset_config}"/"${traefik_proxy}"/dynamic/"${1:-}"_auth_basic.toml
+			rm -f /mnt/"${global_dataset_config}"/"${traefik_proxy}"/dynamic/"${1:-}"_auth_forward.toml
 		fi
 	fi
 }
@@ -102,11 +102,11 @@ exitplugin() {
 	traefik_status=""
 
 	# Check if the jail is compatible with Traefik and copy the right default-config for the job.
-	if [ -z "${link_traefik}" ]; then
+	if [ -z "${traefik_proxy}" ]; then
 		echo "Traefik-connection not enabled... Skipping connecting this jail to traefik"
 	else
-		traefik_includes="${global_dataset_iocage}/jails/${link_traefik}/plugin/includes"
-		traefik_root=/mnt/"${global_dataset_config}"/"${link_traefik}"
+		traefik_includes="${global_dataset_iocage}/jails/${traefik_proxy}/plugin/includes"
+		traefik_root=/mnt/"${global_dataset_config}"/"${traefik_proxy}"
 		traefik_tmp=${traefik_root}/temp
 		traefik_dyn=${traefik_root}/dynamic
 		echo "removing old traefik config..."

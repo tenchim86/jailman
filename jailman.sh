@@ -2,9 +2,15 @@
 #Set to anything other than "true" to disable auto-update
 AUTOUPDATE="true"
 
+#setup logging
+LOG_FILE=/var/log/jailman.log
+exec > >(tee ${LOG_FILE}) 2>&1
+
 # Important defines:
 SCRIPT_NAME="$(basename "$(test -L "${BASH_SOURCE[0]}" && readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOURCE[0]}")");"
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd);
+starttime=$(date +%s)
+export starttime
 export SCRIPT_NAME
 export SCRIPT_DIR
 
@@ -38,6 +44,8 @@ usage() {
 	echo "   Run jail upgrade script"
 	echo "-d [_jailname] [_jailname1] ... [_jailnameN]"
 	echo "   Destroy jails"
+	echo "-n [_jailname] [_jailname1] ... [_jailnameN]"
+	echo "   NUKE/Remove all /config data for a specified jail"
 	echo "-g [_jailname] [_jailname1] ... [_jailnameN]"
 	echo "    Update the jail and any packages inside"
 	echo ""
@@ -80,8 +88,9 @@ installjails=()
 redojails=()
 updatejails=()
 destroyjails=()
+nukedata=()
 upgradejails=()
-while getopts ":i:r:u:d:g:h" opt
+while getopts ":i:r:u:d:n:g:h" opt
 do
 	#Shellcheck on wordsplitting will be disabled. Wordsplitting can't happen, because it's already split using OPTIND.
 	case $opt in
@@ -109,6 +118,12 @@ do
 				OPTIND=$((OPTIND + 1))
 			done
 			;;
+		n ) nukedata=("$OPTARG")
+			until (( OPTIND > arglen )) || [[ ${args[$OPTIND-1]} =~ ^-.* ]]; do
+				nukedata+=("${args[$OPTIND-1]}")
+				OPTIND=$((OPTIND + 1))
+			done
+			;;
 		g ) upgradejails=("$OPTARG")
 			until (( OPTIND > arglen )) || [[ ${args[$OPTIND-1]} =~ ^-.* ]]; do
 				upgradejails+=("${args[$OPTIND-1]}")
@@ -125,6 +140,11 @@ do
 			;;
 	esac
 done
+
+# Color code shortcuts
+normcol='\033[m'
+warncol='\033[33m'
+errcol='\033[31m'
 
 # auto detect iocage install location
 global_dataset_iocage=$(zfs get -H -o value mountpoint "$(iocage get -p)"/iocage)
@@ -149,12 +169,29 @@ if [ ${#destroyjails[@]} -gt 0 ]; then
 	done
 fi
 
+# Check and Execute requested jail destructions
+if [ ${#nukedata[@]} -gt 0 ]; then
+	echo "Jail-datasets to destroy" "${nukedata[@]}"
+	echo -e "${errcol}-n stands for NUKE for a reason."
+	echo -e "We HIGHLY recommend you NOT to use this feature, but destroy any data(sets) yourself, manually. ${normcol}"
+	for jail in "${nukedata[@]}"
+	do
+		read -p "Are you sure you want to destroy ALL data for the ${jail} jail? " -n 1 -r
+		echo    # (optional) move to a new line
+		if [[ $REPLY =~ ^[Yy]$ ]]
+		then
+			zfs destroy "${global_dataset_config}/${jail}" || echo "Nothing deleted"
+			echo -e "${errcol} DESTROYED: ${global_dataset_config}/${jail} ${normcol}"
+		fi
+	done
+fi
+
 # Check and Execute requested jail Installs
 if [ ${#installjails[@]} -gt 0 ]; then
 	echo "jails to install" "${installjails[@]}"
 	for jail in "${installjails[@]}"
 	do
-		plugin=jail_${jail}_plugin
+		plugin=${jail}_plugin
 		if [ -z "${!plugin:-}" ]
 		then
 			echo "Config for ${jail} in config.yml incorrect. Please check your config."
@@ -167,9 +204,9 @@ if [ ${#installjails[@]} -gt 0 ]; then
 			# check plugin install script for syntax errors
 			plugin_installer="${global_dataset_iocage}/jails/${jail}/plugin/jailman/finish_install.sh"
 			if ! bash -n "${plugin_installer}" 2>/dev/null; then
-				echo "ERR: plugin install script at ${plugin_installer} has syntax errors."
+				echo -e "${errcol}ERR: plugin install script at ${plugin_installer} has syntax errors."
 				echo "Please report this issue to the maintainer according to docs/CODEOWNERS."
-				echo "Will not continue."
+				echo -e "Will not continue.${normcol}"
 				exit 1
 			fi
 
@@ -187,7 +224,7 @@ if [ ${#redojails[@]} -gt 0 ]; then
 	echo "jails to reinstall" "${redojails[@]}"
 	for jail in "${redojails[@]}"
 	do
-		plugin=jail_${jail}_plugin
+		plugin=${jail}_plugin
 		if [ -z "${!plugin:-}" ]
 		then
 			echo "Config for ${jail} in config.yml incorrect. Please check your config."
@@ -200,9 +237,9 @@ if [ ${#redojails[@]} -gt 0 ]; then
 			# check plugin install script for syntax errors
 			plugin_installer="${global_dataset_iocage}/jails/${jail}/plugin/jailman/finish_install.sh"
 			if ! bash -n "${plugin_installer}" 2>/dev/null; then
-				echo "ERR: plugin install script at ${plugin_installer} has syntax errors."
+				echo -e "${errcol}ERR: plugin install script at ${plugin_installer} has syntax errors."
 				echo "Please report this issue to the maintainer according to docs/CODEOWNERS."
-				echo "Will not continue."
+				echo -e "Will not continue.${normcol}"
 				exit 1
 			fi
 
@@ -220,7 +257,7 @@ if [ ${#updatejails[@]} -gt 0 ]; then
 	echo "jails to update" "${updatejails[@]}"
 	for jail in "${updatejails[@]}"
 	do
-		plugin=jail_${jail}_plugin
+		plugin=${jail}_plugin
 		if [ -z "${!plugin:-}" ]
 		then
 			echo "Config for ${jail} in config.yml incorrect. Please check your config."
@@ -254,7 +291,7 @@ if [ ${#upgradejails[@]} -gt 0 ]; then
 	echo "jails to update" "${upgradejails[@]}"
 	for jail in "${upgradejails[@]}"
 	do
-		plugin=jail_${jail}_plugin
+		plugin=${jail}_plugin
 		if [ -z "${!plugin:-}" ]
 		then
 			echo "Config for ${jail} in config.yml incorrect. Please check your config."
@@ -280,3 +317,11 @@ if [ ${#upgradejails[@]} -gt 0 ]; then
 		fi
 	done
 fi
+
+
+echo ""
+echo ""
+echo ""
+echo ""
+echo "Jailman run finished, Summary: "
+cat "${SCRIPT_DIR}/summaries/${starttime}.txt"

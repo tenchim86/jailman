@@ -53,11 +53,6 @@ validate_config() {
 }
 
 load_config() {
-	# Parse the Config YAML
-	cfg=$(parse_yaml "${SCRIPT_DIR}/includes/global.yml")
-	validate_config "${SCRIPT_DIR}/includes/global.yml" "$cfg"
-	eval "$cfg"
-
 	cfg=$(parse_yaml "${SCRIPT_DIR}/config.yml")
 	validate_config "${SCRIPT_DIR}/config.yml" "$cfg"
 	eval "$cfg"

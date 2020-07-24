@@ -7,19 +7,19 @@ initplugin() {
 	source "${SCRIPT_DIR}/includes/libstrict.sh"
 	strict::mode
 
-	local jail_name plugin varlist linkplugin linkvarlist value val linkvalue linkval
+	local jail_name plugin varlist linkplugin linkvarlist value val linkvalue linkval globalvarlist
 	jail_name=${1:?}
-	plugin=jail_${jail_name}_plugin
-
+	plugin=${jail_name}_plugin
 	varlist=$(jq -r '.jailman | .variables | .options | .[]' "${global_dataset_iocage}/jails/${jail_name}/${!plugin}.json")
+	global_varlist=$(jq -r '.jailman | .variables | .options | .[]' "${SCRIPT_DIR}/includes/global.json")
 	
-	for var in ${varlist:-} ${global_jails_vars}
+	for var in ${varlist:-} ${global_varlist:-}
 	do
-		value="jail_${jail_name}_$var"
+		value="${jail_name}_$var"
 		val=${!value:-}
 		declare -g "${var}=${val}"
 		
-		linkplugin=jail_${val}_plugin
+		linkplugin=${val}_plugin
 		if [[ "${var}" =~ ^link_.* ]] && [[ -n "${val}" ]] && [[ -n "${!linkplugin}" ]];
 		then
 			# shellcheck disable=SC2143
@@ -28,9 +28,9 @@ initplugin() {
 				echo "ERR: a link to $val was requested but no plugin was found for it"
 			else
 				linkvarlist=$(jq -r '.jailman | .variables | .options | .[]' "${global_dataset_iocage}/jails/${val}/${!linkplugin}.json" || echo "")
-				for linkvar in ${linkvarlist} ${global_jails_vars}
+				for linkvar in ${linkvarlist:-} ${global_varlist:-}
 				do
-					linkvalue="jail_${val}_${linkvar}"
+					linkvalue="${val}_${linkvar}"
 					linkval=${!linkvalue:-}
 					declare -g "${var}_${linkvar}=${linkval}"
 				done
@@ -38,7 +38,7 @@ initplugin() {
 		fi
 	done
 
-	declare -g "jail_root=${global_dataset_iocage}/jails/${jail_name}/root"
+	declare -g "root=${global_dataset_iocage}/jails/${jail_name}/root"
 	declare -g "plugin_dir=${global_dataset_iocage}/jails/${jail_name}/plugin/jailman/"
 	declare -g "includes_dir=${plugin_dir}/includes"
 
@@ -65,9 +65,8 @@ export -f initplugin
 cleanupplugin() {
 	local jail_name=${1:?}
 
-	link_traefik="jail_${jail_name}_link_traefik"
-	link_traefik="${!link_traefik:-}"
-	if [ -n "${link_traefik}" ]; then
+	link_traefik="${jail_name}_link_traefik"
+	if [ -n "${!link_traefik:-}" ]; then
 		echo "removing remains..."
 		rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}".toml
 		rm -f /mnt/"${global_dataset_config}"/"${link_traefik}"/dynamic/"${jail_name}"_auth_basic.toml
@@ -76,41 +75,34 @@ cleanupplugin() {
 }
 export -f cleanupplugin
 
+summadd() {
+	echo "$2"
+	echo "$2" >> "${SCRIPT_DIR}/summaries/${starttime}.txt"
+	iocage exec "$1" echo "$2" >> "/root/PLUGIN_INFO"
+}
+export -f summadd
+
 exitplugin() {
 	# as this function is called from plugins we need to re-enable strict mode
 	# shellcheck source=libstrict.sh
 	source "${SCRIPT_DIR}/includes/libstrict.sh"
 	strict::mode
-	local jail_name status_message plugin_name traefik_service_port traefik_includes traefik_status jailip4 jailgateway jaildhcp setdhcp traefik_root traefik_tmp traefik_dyn
+	local jail_name status_message plugin_name traefik_service_port traefik_includes traefik_status traefik_root traefik_tmp traefik_dyn
 
 	jail_name=${1:?}
 	status_message=${2:-}
-	plugin_name=jail_${jail_name}_plugin
+	plugin_name=${jail_name}_plugin
 	traefik_service_port="$(jq -r '.jailman | .traefik_service_port' "${global_dataset_iocage}/jails/${jail_name}/${!plugin_name}.json")"
 	traefik_status=""
-	jailip4="jail_${jail_name}_ip4_addr"
-	jailgateway="jail_${jail_name}_gateway"
-	jaildhcp="jail_${jail_name}_dhcp"
-	setdhcp=${!jaildhcp:-}
 
 	# Check if the jail is compatible with Traefik and copy the right default-config for the job.
 	if [ -z "${link_traefik}" ]; then
 		echo "Traefik-connection not enabled... Skipping connecting this jail to traefik"
-	elif { [ -z "${setdhcp}" ]  || [ "${setdhcp:-}" == "on" ]; }  && [ -z "${!jailip4:-}" ] && [ -z "${!jailgateway:-}" ]; then
-		echo "Warning: Traefik with DHCP requires that the jail's assigned IP adddress stays the same."
-		echo "Please see the README for details on the setup."
-	elif [[ ${link_traefik} =~ .*[[:space:]]$ ]]; then
-		echo "Trailing whitespace in linked traefik jail '${link_traefik}'"
 	else
 		traefik_includes="${global_dataset_iocage}/jails/${link_traefik}/plugin/includes"
 		traefik_root=/mnt/"${global_dataset_config}"/"${link_traefik}"
 		traefik_tmp=${traefik_root}/temp
 		traefik_dyn=${traefik_root}/dynamic
-		if [ -z "${ip4_addr}" ] && [ "${setdhcp}" == "override" ] && [ -n "${jail_ip}" ]; then
-			echo "Warning: Traefik with DHCP requires that the jail's assigned IP adddress stays the same."
-			echo "Please see the README for details. If you cannot guarantee static IP assignment this will"
-			echo "BREAK in unexpected ways and potentially expose services you did not intend to expose."
-		fi
 		echo "removing old traefik config..."
 		rm -f "${traefik_dyn}/${jail_name}.toml"
 		rm -f "${traefik_dyn}/${jail_name}_auth_basic.toml"
@@ -178,17 +170,22 @@ exitplugin() {
 
 	# Add a file to flag the jail is INSTALLED and thus trigger reinstall on next install
 	echo "DO NOT DELETE THIS FILE" >> "/mnt/${global_dataset_config}/${jail_name}/INSTALLED"
-	echo "Jail ${jail_name} using plugin ${!plugin_name}, installed successfully."
+	
+	summadd "${jail_name}" ""
+	summadd "${jail_name}" "----------"
+	summadd "${jail_name}" ""
+	summadd "${jail_name}" "Summary for: ${jail_name} using ${plugin_name} plugin"
+	summadd "${jail_name}" "Jail ${jail_name} using plugin ${!plugin_name}, installed successfully."
 
 	# Pick the right success message to hint to user how to connect to the jail
 	if [ "${traefik_status}" = "success" ]; then
-		echo "Your jail ${jail_name} running ${!plugin_name} is now accessible via Traefik at https://${domain_name}"
+		summadd "${jail_name}" "Your jail ${jail_name} running ${!plugin_name} is now accessible via Traefik at https://${domain_name}"
 	elif [[ -n "${status_message}" ]]; then
-		echo " ${status_message}"
+		summadd "${jail_name}" " ${status_message}"
 	elif [ -n "${traefik_service_port}" ]; then
-		echo "Your jail ${jail_name} running ${!plugin_name} is now accessible at http://${jail_ip}:${traefik_service_port}"
+		summadd "${jail_name}" "Your jail ${jail_name} running ${!plugin_name} is now accessible at http://${jail_ip}:${traefik_service_port}"
 	else
-		echo "Please consult the wiki for instructions connecting to your newly installed jail"
+		summadd "${jail_name}" "Please consult the wiki for instructions connecting to your newly installed jail"
 	fi
 }
 export -f exitplugin

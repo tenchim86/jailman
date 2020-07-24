@@ -21,36 +21,32 @@ jailcreate() {
 	fi
 
 	echo "Checking config..."
-	local pluginrepo pluginports jailinterfaces jailip4 jailgateway jaildhcp setdhcp pluginextraconf jailextraconf setextra reqvars reqvars version
+	local pluginrepo pluginports jailinterfaces jailip4 jailgateway setdhcp jailextraconf setextra reqvars reqvars version
 	
 	pluginrepo="https://github.com/jailmanager/iocage-plugins.git"
-	pluginports="plugin_${plugin}_ports"
-	jailinterfaces="jail_${jail}_interfaces"
-	jailip4="jail_${jail}_ip4_addr"
-	jailgateway="jail_${jail}_gateway"
-	jaildhcp="jail_${jail}_dhcp"
-	setdhcp=${!jaildhcp:-}
-	pluginextraconf="plugin_${plugin}_custom_iocage"
-	jailextraconf="jail_${jail}_custom_iocage"
-	setextra="${!pluginextraconf:-}${!jailextraconf:+ ${!jailextraconf}}"
-	
+	jailinterfaces="${jail}_interfaces"
+	jailip4="${jail}_ip4_addr"
+	jailgateway="${jail}_gateway"
+	jailextraconf="${jail}_custom_iocage"
+	setextra="${!jailextraconf:+ ${!jailextraconf}}"
 	version="$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")"
-
-
-
 
 	if [ -z "${!jailinterfaces:-}" ]; then
 		jailinterfaces="vnet0:bridge0"
 	else
 		jailinterfaces=${!jailinterfaces}
 	fi
-if [ -z "${setdhcp}" ] && [ -z "${!jailip4}" ] && [ -z "${!jailgateway}" ]; then
-		echo 'no network settings specified in config.yml, defaulting to dhcp="on"'
+
+	if [ -z "${!jailip4:-}" ] || [ -z "${!jailgateway:-}" ]; then
+		echo "missing network settings in config.yml, defaulting to dhcp"
+		echo -e "${warncol}Warning: Some plugins require that the jail's assigned IP adddress stays the same."
+		echo "Please see the README for details. If you cannot guarantee static IP assignment this will"
+		echo -e "BREAK in unexpected ways and potentially expose services you did not intend to expose.${normcol}"
 		setdhcp="on"
 	fi
 
 	echo "Creating jail for $jail"
-	if [ "${setdhcp}" == "on" ] || [ "${setdhcp}" == "override" ]
+	if [ -n "${setdhcp:-}" ]
 	then
 		if !  iocage fetch -g "${pluginrepo}" -P "${plugin}" -n "${jail}" -r "${version}" interfaces="${jailinterfaces}" dhcp="on" vnet="on" allow_raw_sockets="1" boot="on" ${setextra:+"$setextra"}
 		then
@@ -65,14 +61,19 @@ if [ -z "${setdhcp}" ] && [ -z "${!jailip4}" ] && [ -z "${!jailgateway}" ]; then
 		fi
 	fi
 	
-	for reqvar in $(jq -r '.jailman | .variables | .required | .[]' "${global_dataset_iocage}/jails/${jail}/${plugin}.json")
+	reqvars=$(jq -r '.jailman | .variables | .required | .[]' "${global_dataset_iocage}/jails/${jail}/${plugin}.json")
+	global_reqvars=$(jq -r '.jailman | .variables | .required | .[]' "${SCRIPT_DIR}/includes/global.json")
+	
+	for reqvar in ${reqvars:-} ${global_reqvars:-}
 	do
-		varname=jail_${jail}_${reqvar}
+		varname=${jail}_${reqvar}
 		if [ -z "${!varname:-}" ]; then
 			echo "$varname can't be empty"
 			exit 1
 		fi
 	done
+	
+	pluginports="$(jq -r '.jailman | .ports' "${global_dataset_iocage}/jails/${jail}/${plugin}.json")"
 	
 	echo "creating jail config directory"
 	createmount "${jail}" "${global_dataset_config}" || exit 1

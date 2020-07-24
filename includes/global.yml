@@ -1,4 +1,0 @@
-global:
-  jails:
-   vars: ip4_addr host_name gateway link_traefik domain_name traefik_service_port traefik_auth_basic traefik_auth_forward
-   reqvars: 

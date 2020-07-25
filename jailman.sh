@@ -1,4 +1,5 @@
 #!/usr/local/bin/bash
+# shellcheck disable=SC2145,SC2015
 #Set to anything other than "true" to disable auto-update
 AUTOUPDATE="true"
 

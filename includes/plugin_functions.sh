@@ -102,10 +102,14 @@ exitplugin() {
 	traefik_status=""
 
 	# Check if the jail is compatible with Traefik and copy the right default-config for the job.
-	if [ -z "${traefik_proxy}" ]; then
-		echo "Traefik-connection not enabled... Skipping connecting this jail to traefik"
-	else
-		traefik_includes="${global_dataset_iocage}/jails/${traefik_proxy}/plugin/includes"
+	if [ "${!plugin_name}" == "traefik" ]; then
+		traefik_includes="${global_dataset_iocage}/jails/${jail_name}/plugin/jailman/includes"
+		traefik_root=/mnt/"${global_dataset_config}"/"${jail_name}"
+		traefik_tmp=${traefik_root}/temp
+		traefik_dyn=${traefik_root}/dynamic
+		traefik_status="preinstalled"
+	elif [ -n "${traefik_proxy}" ]; then
+		traefik_includes="${global_dataset_iocage}/jails/${traefik_proxy}/plugin/jailman/includes"
 		traefik_root=/mnt/"${global_dataset_config}"/"${traefik_proxy}"
 		traefik_tmp=${traefik_root}/temp
 		traefik_dyn=${traefik_root}/dynamic
@@ -130,6 +134,8 @@ exitplugin() {
 			cp "${traefik_includes}/default.toml" "${traefik_tmp}/${jail_name}.toml"
 			traefik_status="preinstalled"
 		fi
+	else
+		echo "Traefik-connection not enabled... Skipping connecting this jail to traefik"
 	fi
 
 	# If the default config requires post-processing (it always does except for user-custom config in /config), do the post processing.
@@ -148,7 +154,17 @@ exitplugin() {
 			echo "Cannot setup traefik with both basic AND forward auth. Please pick one only."
 		elif [ -n "${traefik_auth_basic}" ]; then
 			echo "Adding basic auth to Traefik for jail ${jail_name}"
-			users="$(sed 's/[^[:space:]]\{1,\}/"&"/g;s/ /,/g' <<<"${traefik_auth_basic}")"
+			users=""
+			for cred in ${traefik_auth_basic}
+			do
+				username=$(echo "${cred}" | cut -d: -f1)
+				password=$(echo "${cred}" | cut -d: -f2)
+				password=$(openssl passwd -apr1 "${password}")
+				users="${users:-} ${username}:${password}"
+			done
+			# shellcheck disable=SC2001
+			users=$(echo "$users" | sed -e 's/^[[:space:]]*//')
+			users="$(sed 's/[^[:space:]]\{1,\}/"&"/g;s/ /,/g' <<<"${users}")"
 			cp "${traefik_includes}/default_auth_basic.toml" "${traefik_tmp}/${jail_name}_auth_basic.toml"
 			sed -i '' \
 				-e "s|placeholdername|${1//&/\\&}|" \
@@ -180,8 +196,8 @@ exitplugin() {
 	summadd "${jail_name}" ""
 	summadd "${jail_name}" "----------"
 	summadd "${jail_name}" ""
-	summadd "${jail_name}" "Summary for: ${jail_name} using ${plugin_name} plugin"
-	summadd "${jail_name}" "Jail ${jail_name} using plugin ${!plugin_name}, installed successfully."
+	summadd "${jail_name}" "Summary for: ${jail_name}"
+	summadd "${jail_name}" "Jail ${jail_name} installed successfully using plugin ${!plugin_name}."
 
 	# Pick the right success message to hint to user how to connect to the jail
 	if [ "${traefik_status}" = "success" ]; then

@@ -4,12 +4,12 @@
 # Check if dataset for completed download and it parent dataset exist, create if they do not.
 # shellcheck disable=SC2154
 createmount "$1" "${global_dataset_downloads}"
-createmount "$1" "${global_dataset_downloads}"/complete /mnt/fetched
+createmount "$1" "${global_dataset_downloads}"/Complete /mnt/fetched
 
 # Check if dataset for media library and the dataset for movies exist, create if they do not.
 # shellcheck disable=SC2154
 createmount "$1" "${global_dataset_media}"
-createmount "$1" "${global_dataset_media}"/movies /mnt/movies
+createmount "$1" "${global_dataset_media}"/Movies /mnt/Movies
 
 iocage exec "$1" "fetch https://github.com/Radarr/Radarr/releases/download/v0.2.0.1480/Radarr.develop.0.2.0.1480.linux.tar.gz -o /usr/local/share"
 iocage exec "$1" "tar -xzvf /usr/local/share/Radarr.develop.0.2.0.1480.linux.tar.gz -C /usr/local/share"

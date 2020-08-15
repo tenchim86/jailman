@@ -4,12 +4,12 @@
 # Check if dataset for completed download and it parent dataset exist, create if they do not.
 # shellcheck disable=SC2154
 createmount "$1" "${global_dataset_downloads}"
-createmount "$1" "${global_dataset_downloads}"/complete /mnt/fetched
+createmount "$1" "${global_dataset_downloads}"/Complete /mnt/fetched
 
 # Check if dataset for media library and the dataset for tv shows exist, create if they do not.
 # shellcheck disable=SC2154
 createmount "$1" "${global_dataset_media}"
-createmount "$1" "${global_dataset_media}"/shows /mnt/shows
+createmount "$1" "${global_dataset_media}"/TV\ Shows /mnt/TV\ Shows
 
 iocage exec "$1" "fetch http://download.sonarr.tv/v2/master/mono/NzbDrone.master.tar.gz -o /usr/local/share"
 iocage exec "$1" "tar -xzvf /usr/local/share/NzbDrone.master.tar.gz -C /usr/local/share"

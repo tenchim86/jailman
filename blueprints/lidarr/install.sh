@@ -4,12 +4,12 @@
 # Check if dataset for completed download and it parent dataset exist, create if they do not.
 # shellcheck disable=SC2154
 createmount "$1" "${global_dataset_downloads}"
-createmount "$1" "${global_dataset_downloads}"/complete /mnt/fetched
+createmount "$1" "${global_dataset_downloads}"/Complete /mnt/fetched
 
 # Check if dataset for media library and the dataset for movies exist, create if they do not.
 # shellcheck disable=SC2154
 createmount "$1" "${global_dataset_media}"
-createmount "$1" "${global_dataset_media}"/music /mnt/music
+createmount "$1" "${global_dataset_media}"/Music /mnt/Music
 
 
 iocage exec "$1" "fetch https://github.com/lidarr/Lidarr/releases/download/v0.7.1.1381/Lidarr.master.0.7.1.1381.linux.tar.gz -o /usr/local/share"

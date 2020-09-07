@@ -1,65 +1,78 @@
-# Sonarr
+# Sabnzbd
 
-## Original README from the sonarr github:
+## Original README from the sabnzbd github:
 
-https://github.com/Sonarr/Sonarr
+https://github.com/sabnzbd/sabnzbd
 
-# Sonarr
+# Sabnzbd
 
+SABnzbd - The automated Usenet download tool
+============================================
 
-Sonarr is a PVR for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new episodes of your favorite shows and will grab, sort and rename them. It can also be configured to automatically upgrade the quality of files already downloaded when a better quality format becomes available.
+[![Travis CI](https://travis-ci.org/sabnzbd/sabnzbd.svg?branch=develop)](https://travis-ci.org/sabnzbd/sabnzbd)
+[![AppVeryor](https://ci.appveyor.com/api/projects/status/github/sabnzbd/sabnzbd?svg=true&branch=develop)](https://ci.appveyor.com/project/Safihre/sabnzbd)
+[![Snap Status](https://build.snapcraft.io/badge/sabnzbd/sabnzbd.svg)](https://snapcraft.io/sabnzbd)
+[![License](https://img.shields.io/badge/license-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
-## Major Features Include:
+SABnzbd is an Open Source Binary Newsreader written in Python.
 
-* Support for major platforms: Windows, Linux, macOS, Raspberry Pi, etc.
-* Automatically detects new episodes
-* Can scan your existing library and download any missing episodes
-* Can watch for better quality of the episodes you already have and do an automatic upgrade. *eg. from DVD to Blu-Ray*
-* Automatic failed download handling will try another release if one fails
-* Manual search so you can pick any release or to see why a release was not downloaded automatically
-* Fully configurable episode renaming
-* Full integration with SABnzbd and NZBGet
-* Full integration with Kodi, Plex (notification, library update, metadata)
-* Full support for specials and multi-episode releases
-* And a beautiful UI
+It's totally free, easy to use, and works practically everywhere.
+SABnzbd makes Usenet as simple and streamlined as possible by automating everything we can. All you have to do is add an `.nzb`. SABnzbd takes over from there, where it will be automatically downloaded, verified, repaired, extracted and filed away with zero human interaction.
+SABnzbd offers an easy setup wizard and has self-analysis tools to verify your setup.
 
-## Configuring Development Environment:
+If you want to know more you can head over to our website: https://sabnzbd.org.
 
-### Requirements
+## Resolving Dependencies
 
-* [Visual Studio 2017](https://www.visualstudio.com/vs/)
-* [Git](https://git-scm.com/downloads)
-* [NodeJS](https://nodejs.org/en/download/)
-* [Yarn](https://yarnpkg.com/)
+SABnzbd has a few dependencies you'll need before you can get running. If you've previously run SABnzbd from one of the various Linux packages, then you likely already have all the needed dependencies. If not, here's what you're looking for:
 
-### Setup
+- `python` (Python 3.5 and higher, often called `python3`)
+- Python modules listed in `requirements.txt`
+- `par2` (Multi-threaded par2 installation guide can be found [here](https://sabnzbd.org/wiki/installation/multicore-par2))
+- `unrar` (make sure you get the "official" non-free version of unrar)
 
-* Make sure all the required software mentioned above are installed
-* Clone the repository into your development machine. [*info*](https://help.github.com/en/articles/working-with-forks)
-* Grab the submodules `git submodule init && git submodule update`
-* Install the required Node Packages `yarn`
+Optional:
+- See `requirements.txt`
 
-### Backend Development
+Your package manager should supply these. If not, we've got links in our [installation guide](https://github.com/sabnzbd/sabnzbd/blob/master/INSTALL.txt).
 
-* Run `yarn build` to build the UI
-* Open `Sonarr.sln` in Visual Studio
-* Make sure `NzbDrone.Console` is set as the startup project
-* Build `NzbDrone.Windows` and `NzbDrone.Mono` projects
-* Build Solution
+## Running SABnzbd from source
 
-### UI Development
+Once you've sorted out all the dependencies, simply run:
 
-* Run `yarn watch` to build UI and rebuild automatically when changes are detected
-* Run Sonarr.Console.exe (or debug in Visual Studio)
+```
+python3 -OO SABnzbd.py
+```
 
-### License
+Or, if you want to run in the background:
 
+```
+python3 -OO SABnzbd.py -d -f /path/to/sabnzbd.ini
+```
 
-* [GNU GPL v3](http://www.gnu.org/licenses/gpl.html)
-* Copyright 2010-2019
+If you want multi-language support, run:
 
-### Sponsors
+```
+python3 tools/make_mo.py
+```
 
-* [JetBrains](http://www.jetbrains.com/) for providing us with free licenses to their great tools
-    * [ReSharper](http://www.jetbrains.com/resharper/)
-    * [TeamCity](http://www.jetbrains.com/teamcity/)
+Our many other command line options are explained in depth [here](https://sabnzbd.org/wiki/advanced/command-line-parameters).
+
+## About Our Repo
+
+The workflow we use, is a simplified form of "GitFlow".
+Basically:
+- `master` contains only stable releases (which have been merged to `master`) and is intended for end-users.
+- `develop` is the target for integration and is **not** intended for end-users.
+- `1.1.x` is a release and maintenance branch for 1.1.x (1.1.0 -> 1.1.1 -> 1.1.2) and is **not** intended for end-users.
+- `feature/my_feature` is a temporary feature branch based on `develop`.
+- `bugfix/my_bugfix` is an optional temporary branch for bugfix(es) based on `develop`.
+
+Conditions:
+- Merging of a stable release into `master` will be simple: the release branch is always right.
+- `master` is not merged back to `develop`.
+- `develop` is not re-based on `master`.
+- Release branches branch from `develop` only.
+- Bugfixes created specifically for a release branch are done there (because they are specific, they're not cherry-picked to `develop`).
+- Bugfixes done on `develop` may be cherry-picked to a release branch.
+- We will not release a 1.0.2 if a 1.1.0 has already been released.

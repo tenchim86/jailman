@@ -1,24 +1,19 @@
 #!/usr/local/bin/bash
-# This file contains the install script for sonarr
+# This file contains the install script for sabnzbd
 
-# Check if dataset for completed download and it parent dataset exist, create if they do not.
+# Check if dataset Downloads dataset exist, create if they do not.
 # shellcheck disable=SC2154
-createmount "$1" "${global_dataset_downloads}"
-createmount "$1" "${global_dataset_downloads}"/Complete /mnt/fetched
+createmount "$1" "${global_dataset_downloads}" /mnt/Downloads
 
-# Check if dataset for media library and the dataset for tv shows exist, create if they do not.
-# shellcheck disable=SC2154
-createmount "$1" "${global_dataset_media}"
-createmount "$1" "${global_dataset_media}"/TV\ Shows /mnt/TV\ Shows
+# Check if dataset Complete Downloads dataset exist, create if they do not.
+createmount "$1" "${global_dataset_downloads}"/Complete /mnt/Downloads/Complete
 
-iocage exec "$1" "fetch http://download.sonarr.tv/v2/master/mono/NzbDrone.master.tar.gz -o /usr/local/share"
-iocage exec "$1" "tar -xzvf /usr/local/share/NzbDrone.master.tar.gz -C /usr/local/share"
-iocage exec "$1" rm /usr/local/share/NzbDrone.master.tar.gz
-iocage exec "$1" "pw user add sonarr -c sonarr -u 351 -d /nonexistent -s /usr/bin/nologin"
-iocage exec "$1" chown -R sonarr:sonarr /usr/local/share/NzbDrone /config
-iocage exec "$1" mkdir /usr/local/etc/rc.d
-# shellcheck disable=SC2154
-cp "${SCRIPT_DIR}"/blueprints/sonarr/includes/sonarr.rc /mnt/"${global_dataset_iocage}"/jails/"$1"/root/usr/local/etc/rc.d/sonarr
-iocage exec "$1" chmod u+x /usr/local/etc/rc.d/sonarr
-iocage exec "$1" sysrc "sonarr_enable=YES"
-iocage exec "$1" service sonarr restart
+# Check if dataset InComplete Downloads dataset exist, create if they do not.
+createmount "$1" "${global_dataset_downloads}"/Incomplete /mnt/Downloads/Incomplete
+
+
+iocage exec "$1" chown -R sabnzbd:sabnzbd /config
+iocage exec "$1" sysrc "sabnzbdn_enable=YES"
+iocage exec "$1" sysrc "sabnzbd_conf_dir=/config"
+iocage exec "$1" sysrc "sabnzbd_download_dir=/mnt/Downloads/Complete"
+iocage exec "$1" service sabnzbd restart

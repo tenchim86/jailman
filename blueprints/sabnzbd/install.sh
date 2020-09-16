@@ -15,9 +15,9 @@ createmount "$1" "${global_dataset_downloads}"/Incomplete /mnt/Downloads/Incompl
 iocage exec "$1" pkg update
 iocage exec "$1" pkg install sabnzbdplus
 iocage exec "$1" service sabnzbd start
-iocage exec "$1" chown -R sabnzbd:sabnzbd /config
-iocage exec "$1" sysrc "sabnzbdn_enable=YES"
+iocage exec "$1" sysrc "sabnzbd_enable=YES"
 iocage exec "$1" sysrc "sabnzbd_conf_dir=/config"
+iocage exec "$1" chown -R sabnzbd:sabnzbd /config
 iocage exec "$1" service sabnzbd restart
 
 echo "Finished installing sabnzbd"

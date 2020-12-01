@@ -15,7 +15,7 @@ createmount "$1" "${global_dataset_media}"/Audiobooks /mnt/Media/Audiobooks
 createmount "$1" "${global_dataset_media}"/Movies /mnt/Media/Movies
 createmount "$1" "${global_dataset_media}"/Music /mnt/Media/Music
 createmount "$1" "${global_dataset_media}"/Tutorials /mnt/Media/Tutorials
-createmount "$1" "${global_dataset_media}"/TV\ Shows /mnt/Media/TV\ Shows
+createmount "$1" "${global_dataset_media}"/TV Shows /mnt/Media/TV Shows
 createmount "$1" "${global_dataset_media}"/Photos /mnt/Media/Photos
 
 # Create plex ramdisk if specified
